@@ -2,27 +2,35 @@ structure SplittableRandom:
 sig
   type t
   type rand = t
+
   type w64 = Word64.word
   type w32 = Word32.word
 
+  (* construction and splitting *)
+
   val new: int -> rand
-
-
-  val gen_w64: rand -> rand * w64
-  val gen_int_in_range: rand -> int * int -> rand * int
-
-  val gen_many_w64: rand -> rand * (int -> w64)
-  val gen_many_int_in_range: rand -> int * int -> rand * (int -> int)
-
-  (*
-  val gen_real_in_range: rand -> real * real -> rand * real
-  val gen_bool: rand -> rand * bool
-  *)
-
   val split: rand -> rand * rand
   val split_many: rand -> rand * (int -> rand)
 
+  (* generators *)
 
+  val gen_w32: rand -> rand * w32
+  val gen_many_w32: rand -> rand * (int -> w32)
+
+  val gen_w64: rand -> rand * w64
+  val gen_many_w64: rand -> rand * (int -> w64)
+
+  val gen_int: rand -> rand * int
+  val gen_many_int: rand -> rand * (int -> int)
+
+  val gen_int_in_range: rand -> int * int -> rand * int
+  val gen_many_int_in_range: rand -> int * int -> rand * (int -> int)
+
+  val gen_real: rand -> rand * real
+  val gen_many_real: rand -> rand * (int -> real)
+
+
+  (* some internal functions: don't expect these to be stable across versions *)
   structure Internal:
   sig
     val new_from_seed_and_gamma: w64 * w64 -> rand
@@ -170,6 +178,22 @@ struct
     end
 
 
+  fun gen_w32 (r: rand) : rand * w32 =
+    let val (r, w) = Internal.advance r
+    in (r, Internal.mix32 w)
+    end
+
+
+  fun gen_many_w32 r =
+    let
+      val (r, new_r) = split r
+      fun gen i =
+        Internal.mix32 (Internal.nth_seed new_r (Word64.fromInt i))
+    in
+      (r, gen)
+    end
+
+
   fun gen_w64 (r: rand) : rand * w64 =
     let val (r, w) = Internal.advance r
     in (r, Internal.mix64 w)
@@ -181,6 +205,22 @@ struct
       val (r, new_r) = split r
       fun gen i =
         Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i))
+    in
+      (r, gen)
+    end
+
+
+  fun gen_int (r: rand) : rand * int =
+    let val (r, w) = Internal.advance r
+    in (r, Word64.toIntX (Internal.mix64 w))
+    end
+
+
+  fun gen_many_int r =
+    let
+      val (r, new_r) = split r
+      fun gen i =
+        Word64.toIntX (Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i)))
     in
       (r, gen)
     end
@@ -204,7 +244,7 @@ struct
 
   fun gen_many_int_in_range r (lo, hi) =
     if lo >= hi then
-      raise Fail "SplittableRandom.gen_int_in_range: error: lo >= hi"
+      raise Fail "SplittableRandom.gen_many_int_in_range: error: lo >= hi"
     else
       let
         val wlo = Word64.fromInt lo
@@ -217,11 +257,40 @@ struct
           let
             val w = Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i))
           in
-            Word64.+ (wlo, Word64.mod (w, n))
+            Word64.toIntX (Word64.+ (wlo, Word64.mod (w, n)))
           end
       in
         (r, gen)
       end
+
+
+  val double_ulp: Real64.real =
+    1.0 / (Real64.fromInt (Word64.toIntX (Word64.<< (0w1, 0w53))))
+
+
+  fun gen_real r =
+    let
+      val (r, w) = gen_w64 r
+      val x = Real64.fromInt (Word64.toIntX (Word64.>> (w, 0w11))) * double_ulp
+    in
+      (r, Real.fromLarge IEEEReal.TO_NEAREST x)
+    end
+
+
+  fun gen_many_real r =
+    let
+      val (r, new_r) = split r
+      fun gen i =
+        let
+          val w = Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i))
+          val x =
+            Real64.fromInt (Word64.toIntX (Word64.>> (w, 0w11))) * double_ulp
+        in
+          Real.fromLarge IEEEReal.TO_NEAREST x
+        end
+    in
+      (r, gen)
+    end
 
 
 end
