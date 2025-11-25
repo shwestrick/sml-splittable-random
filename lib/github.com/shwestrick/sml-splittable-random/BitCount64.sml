@@ -19,7 +19,7 @@ struct
     end
 
   (* Inspired by
-   *   https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive
+   *   https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
    * reworked with a little AI help...
    *)
   fun bit_count (w: Word64.word) : int =
