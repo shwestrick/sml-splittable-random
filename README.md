@@ -1,17 +1,21 @@
 # sml-splittable-random
 
-Splittable, purely functional pseudo-random generator in Standard ML, based on
-SplitMix by
+Splittable, pseudo-random generator in Standard ML, based on SplitMix by
 Steele, Lea, and Flood (https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)
 which is the basis of Java's `java.util.SplittableRandom` class. This generator
 is optimized for efficiency, and is suitable for general pseudo-randomness,
 such as in the implementation of randomized algorithms or random testing.
-
 This library should **not** be used for any cryptographic purposes.
 
-The generated output exactly matches `java.util.SplittableRandom`.
-(Checked 11-29-2025, Java version `24.0.1`.)
-See [`compare-java/`](./compare-java).
+Splitting is useful for divide-and-conquer-style code, especially
+parallel algorithms, where multiple generators can be used independently
+in two or more subtasks. Splitting also conveniently allows for generating
+unbounded streams of pseudo-random values.
+
+This library has been checked against `java.util.SplittableRandom`. On
+the same seed, it produces exactly the same values.
+See [`compare-java/`](./compare-java). (Last checked 11-29-2025,
+Java version `24.0.1`.)
 
 Compatible with the [`smlpkg`](https://github.com/diku-dk/smlpkg)
 package manager.
@@ -29,9 +33,9 @@ with SML/NJ. All have the same interface, described below.
 
 # Interface
 
-A fresh generator can be instantiated with `new s` where `s` is some seed.
-Note that all generators constructed in this way have the same initial
-`gamma` (the stride in the SplitMix algorithm).
+The full interface is shown below. A fresh generator can be instantiated with
+`new s` where `s` is some seed. Note that all generators constructed in this
+way have the same initial `gamma` (the stride in the SplitMix algorithm).
 
 This library is purely functional. Each value
 `r: rand` is a generator, and "using" a generator returns a new generator.
