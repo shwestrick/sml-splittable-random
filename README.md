@@ -14,9 +14,10 @@ in two or more subtasks. Splitting also conveniently allows for generating
 unbounded streams of pseudo-random values.
 
 The SplitMix algorithm is
-the basis of Java's `java.util.SplittableRandom` class.
-This library has been checked against `java.util.SplittableRandom`. On
-the same seed, it produces exactly the same values.
+the basis of Java's `java.util.SplittableRandom` class. The
+`sml-splittable-random` library has been checked against
+`java.util.SplittableRandom`: on the same seed, the two implementations
+produce exactly the same values.
 See [`compare-java/`](./compare-java). (Last checked 11-29-2025,
 Java version `24.0.1`.)
 
