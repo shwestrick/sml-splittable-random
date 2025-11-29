@@ -3,4 +3,5 @@ Library
 is
   $/basis.cm
   BitCount64.sml
+  Mixers.sml
   SplittableRandom.sml

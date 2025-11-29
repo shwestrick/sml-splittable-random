@@ -4,6 +4,8 @@
 
 Splittable pseudo-random generator in Standard ML, based on SplitMix by
 Steele, Lea, and Flood (https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf).
+The generated output exactly matches Java 24.0.1.
+See [`compare-java/`](./compare-java).
 
 Compatible with the [`smlpkg`](https://github.com/diku-dk/smlpkg)
 package manager.
@@ -36,27 +38,33 @@ val (r, i: int) = gen_int r
 ```
 
 A generator can be split into two independent generators with the `split`
-function. Use the `split_many` to produce many independent generators. This
-is encoded in terms of a function `int -> rand` which can be called to
-produce the `i`th output generator. Here, `i` should be at least 0, but can
-be arbitrarily large.
+function. Use `split_many` to produce many independent generators. This
+produces a function `g: int -> rand` where `g i` is the ith generator.
+Here, `i` should be at least 0, but can be arbitrarily large.
 
 ```sml
-val (r, new_rs) = split_many r
+(* split into two generators *)
+val (r, r') = split r
+
+(* split into many generators *)
+val (r, g) = split_many r
 val xs = List.tabulate (1000, fn i =>
   let
-    val r' = new_rs i
+    val r' = g i
   in
     ... (* use r' *)
   end)
 
-(* the new version of r is usable here *)
+(* splitting always returns a new version of
+ * the original generator which can be used freely.
+ *)
 val (r, x) = gen_real r
+val (r', x') = gen_real r'
 ```
 
 Similarly, generators for base types come in two flavors: individual, and
-"many". The "many" version always returns a function `int -> T` for some
-base type `T`, used in the same manner as described above.
+"many". The "many" versions return functions of type `int -> ...`,
+used in the same manner as described above.
 
 ```sml
 structure SplittableRandom:

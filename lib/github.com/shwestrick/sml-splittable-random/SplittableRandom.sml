@@ -29,17 +29,6 @@ sig
   val gen_real: rand -> rand * real
   val gen_many_real: rand -> rand * (int -> real)
 
-
-  (* some internal functions: don't expect these to be stable across versions *)
-  structure Internal:
-  sig
-    val new_from_seed_and_gamma: w64 * w64 -> rand
-    val mix64: w64 -> w64
-    val mix64_variant13: w64 -> w64
-    val mix32: w64 -> w32
-    val mix_gamma: w64 -> w64
-  end
-
 end =
 struct
 
@@ -49,94 +38,13 @@ struct
   datatype rand = Rand of {seed: w64, gamma: w64}
   type t = rand
 
-
   val golden_gamma: w64 = 0wx9e3779b97f4a7c15
-
-  fun new seed =
-    Rand {seed = Word64.fromInt seed, gamma = golden_gamma}
-
 
   structure Internal =
   struct
 
-    fun new_from_seed_and_gamma (seed, gamma) =
-      Rand {seed = seed, gamma = gamma}
-
-    (*
-      private static long mix64(long z) {
-        z = (z ^ (z >>> 33)) * 0xff51afd7ed558ccdL;
-        z = (z ^ (z >>> 33)) * 0xc4ceb9fe1a85ec53L;
-        return z ^ (z >>> 33);
-      }
-    *)
-
-    fun mix64 (z: w64) =
-      let
-        val z = Word64.xorb (z, Word64.>> (z, 0w33))
-        val z = Word64.* (z, 0wxff51afd7ed558ccd)
-        val z = Word64.xorb (z, Word64.>> (z, 0w33))
-        val z = Word64.* (z, 0wxc4ceb9fe1a85ec53)
-        val z = Word64.xorb (z, Word64.>> (z, 0w33))
-      in
-        z
-      end
-
-    (*
-      private static int mix32(long z) {
-        z = (z ^ (z >>> 33)) * 0xff51afd7ed558ccdL;
-        z = (z ^ (z >>> 33)) * 0xc4ceb9fe1a85ec53L;
-        return (int)(z >>> 32); 
-      }
-    *)
-
-    fun mix32 (z: w64) : w32 =
-      let
-        val z = Word64.xorb (z, Word64.>> (z, 0w33))
-        val z = Word64.* (z, 0wxff51afd7ed558ccd)
-        val z = Word64.xorb (z, Word64.>> (z, 0w33))
-        val z = Word64.* (z, 0wxc4ceb9fe1a85ec53)
-        val z = Word64.>> (z, 0w32)
-      in
-        Word32.fromLarge z
-      end
-
-    (*
-      private static long mix64variant13(long z) {
-        z = (z ^ (z >>> 30)) * 0xbf58476d1ce4e5b9L;
-        z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL;
-        return z ^ (z >>> 31); 
-      }
-    *)
-
-    fun mix64_variant13 (z: w64) =
-      let
-        val z = Word64.xorb (z, Word64.>> (z, 0w30))
-        val z = Word64.* (z, 0wxbf58476d1ce4e5b9)
-        val z = Word64.xorb (z, Word64.>> (z, 0w27))
-        val z = Word64.* (z, 0wx94d049bb133111eb)
-        val z = Word64.xorb (z, Word64.>> (z, 0w31))
-      in
-        z
-      end
-
-    (*
-      private static long mixGamma(long z) {
-        z = mix64variant13(z) | 1L;
-        int n = Long.bitCount(z ^ (z >>> 1));
-        if (n >= 24) z ^= 0xaaaaaaaaaaaaaaaaL;
-        return z; 
-      }
-    *)
-
-
-    fun mix_gamma (z: w64) =
-      let
-        val z = Word64.orb (mix64_variant13 z, 0w1)
-        val n = BitCount64.bit_count (Word64.xorb (z, Word64.>> (z, 0w1)))
-      in
-        if n >= 24 then Word64.xorb (z, 0wxaaaaaaaaaaaaaaaa) else z
-      end
-
+    fun new (seed, gamma) =
+      Rand {seed = seed + gamma, gamma = gamma}
 
     fun advance (Rand {seed, gamma}) =
       (Rand {seed = seed + gamma, gamma = gamma}, seed)
@@ -147,7 +55,19 @@ struct
     fun jump (Rand {seed, gamma}) i =
       Rand {seed = seed + Word64.* (i, gamma), gamma = gamma}
 
+    local
+      open Mixers.FromJavaSrc
+    in
+      val mix64 = mix64
+      val mix32 = mix32
+      val mix_gamma = mix_gamma
+    end
+
   end
+
+
+  fun new seed =
+    Internal.new (Word64.fromInt seed, golden_gamma)
 
 
   fun split r =
@@ -155,7 +75,7 @@ struct
       val (r, seed1) = Internal.advance r
       val (r, seed2) = Internal.advance r
       val newr =
-        Rand {seed = Internal.mix64 seed1, gamma = Internal.mix_gamma seed2}
+        Internal.new (Internal.mix64 seed1, Internal.mix_gamma seed2)
     in
       (r, newr)
     end
@@ -171,7 +91,7 @@ struct
           val seed1 = Internal.nth_seed new_r (0w2 * i)
           val seed2 = Internal.nth_seed new_r (0w2 * i + 0w1)
         in
-          Rand {seed = Internal.mix64 seed1, gamma = Internal.mix_gamma seed2}
+          Internal.new (Internal.mix64 seed1, Internal.mix_gamma seed2)
         end
     in
       (r, gen)
