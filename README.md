@@ -1,10 +1,11 @@
 # sml-splittable-random
 
 Splittable, pseudo-random generator in Standard ML, based on SplitMix by
-Steele, Lea, and Flood (https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)
-which is the basis of Java's `java.util.SplittableRandom` class. This generator
-is optimized for efficiency, and is suitable for general pseudo-randomness,
-such as in the implementation of randomized algorithms or random testing.
+Steele, Lea, and Flood (https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf).
+This generator is optimized for efficiency, and is suitable for general
+pseudo-randomness, such as in the implementation of randomized algorithms or
+random testing.
+
 This library should **not** be used for any cryptographic purposes.
 
 Splitting is useful for divide-and-conquer-style code, especially
@@ -12,6 +13,8 @@ parallel algorithms, where multiple generators can be used independently
 in two or more subtasks. Splitting also conveniently allows for generating
 unbounded streams of pseudo-random values.
 
+The SplitMix algorithm is
+the basis of Java's `java.util.SplittableRandom` class.
 This library has been checked against `java.util.SplittableRandom`. On
 the same seed, it produces exactly the same values.
 See [`compare-java/`](./compare-java). (Last checked 11-29-2025,
