@@ -5,3 +5,4 @@ is
   BitCount64.sml
   Mixers.sml
   SplittableRandom.sml
+  WordToReal.not-mlton.sml

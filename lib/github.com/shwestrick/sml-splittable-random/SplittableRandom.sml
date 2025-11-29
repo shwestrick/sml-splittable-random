@@ -5,6 +5,7 @@ sig
 
   type w64 = Word64.word
   type w32 = Word32.word
+  type r64 = Real64.real
 
   (* construction and splitting *)
 
@@ -29,11 +30,15 @@ sig
   val gen_real: rand -> rand * real
   val gen_many_real: rand -> rand * (int -> real)
 
+  val gen_r64: rand -> rand * r64
+  val gen_many_r64: rand -> rand * (int -> r64)
+
 end =
 struct
 
   type w64 = Word64.word
   type w32 = Word32.word
+  type r64 = Real64.real
 
   datatype rand = Rand of {seed: w64, gamma: w64}
   type t = rand
@@ -211,31 +216,47 @@ struct
 
 
   val double_ulp: Real64.real =
-    1.0 / (Real64.fromInt (Word64.toIntX (Word64.<< (0w1, 0w53))))
+    1.0 / WordToReal.w64_to_r64 (Word64.<< (0w1, 0w53))
 
 
-  fun gen_real r =
+  fun gen_r64 r =
     let
       val (r, w) = gen_w64 r
-      val x = Real64.fromInt (Word64.toIntX (Word64.>> (w, 0w11))) * double_ulp
+      val x = WordToReal.w64_to_r64 (Word64.>> (w, 0w11)) * double_ulp
     in
-      (r, Real.fromLarge IEEEReal.TO_NEAREST x)
+      (r, x)
     end
 
 
-  fun gen_many_real r =
+  fun gen_many_r64 r =
     let
       val (r, new_r) = split r
       fun gen i =
         let
           val w = Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i))
           val x =
-            Real64.fromInt (Word64.toIntX (Word64.>> (w, 0w11))) * double_ulp
+            WordToReal.w64_to_r64 (Word64.>> (w, 0w11)) * double_ulp
         in
-          Real.fromLarge IEEEReal.TO_NEAREST x
+          x
         end
     in
       (r, gen)
+    end
+
+
+  fun gen_real r =
+    let
+      val (r, x) = gen_r64 r
+    in
+      (r, Real.fromLarge IEEEReal.TO_NEAREST x)
+    end
+
+  
+  fun gen_many_real r =
+    let
+      val (r, gen) = gen_many_r64 r
+    in
+      (r, Real.fromLarge IEEEReal.TO_NEAREST o gen)
     end
 
 

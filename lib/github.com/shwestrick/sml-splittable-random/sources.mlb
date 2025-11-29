@@ -1,5 +1,7 @@
 local
   $(SML_LIB)/basis/basis.mlb
+  $(SML_LIB)/basis/mlton.mlb
+  WordToReal.mlton.sml
   BitCount64.sml
   Mixers.sml
   SplittableRandom.sml

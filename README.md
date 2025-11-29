@@ -97,6 +97,7 @@ sig
 
   type w64 = Word64.word
   type w32 = Word32.word
+  type r64 = Real64.real
 
   (* construction and splitting *)
 
@@ -120,5 +121,8 @@ sig
 
   val gen_real: rand -> rand * real
   val gen_many_real: rand -> rand * (int -> real)
+
+  val gen_r64: rand -> rand * r64
+  val gen_many_r64: rand -> rand * (int -> r64)
 end
 ```
