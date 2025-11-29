@@ -1,0 +1,4 @@
+$(SML_LIB)/basis/basis.mlb
+lib/github.com/mpllang/mpllib/sources.mpl.mlb
+../lib/github.com/shwestrick/sml-splittable-random/sources.mlb
+main.sml
