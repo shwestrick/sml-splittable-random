@@ -26,14 +26,17 @@ package manager.
 
 # Library sources
 
-Two source files:
+Three source files:
 
 * `lib/github.com/shwestrick/sml-splittable-random/sources.mlb`
 * `lib/github.com/shwestrick/sml-splittable-random/sources.cm`
+* `lib/github.com/shwestrick/sml-splittable-random/sources.not-mlton.mlb`
 
 The `.mlb` file is for use with [MLton](http://mlton.org/)
-or [MaPLe](https://github.com/mpllang/mpl). The `.cm` file is for use
-with SML/NJ. All have the same interface, described below.
+or [MaPLe](https://github.com/mpllang/mpl); these use MLton-based features for
+improved efficiency. The `.not-mlton.mlb` file can be used for other
+implementations. The `.cm` file is for
+use with SML/NJ. All have the same interface, described below.
 
 # Interface
 

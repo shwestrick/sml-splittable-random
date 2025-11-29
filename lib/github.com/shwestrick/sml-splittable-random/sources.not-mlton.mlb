@@ -1,0 +1,9 @@
+local
+  $(SML_LIB)/basis/basis.mlb
+  WordToReal.not-mlton.sml
+  BitCount64.sml
+  Mixers.sml
+  SplittableRandom.sml
+in
+  structure SplittableRandom
+end
