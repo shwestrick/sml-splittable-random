@@ -1,7 +1,5 @@
 # sml-splittable-random
 
-:warning: A few bugs still, but mostly working. :warning:
-
 Splittable pseudo-random generator in Standard ML, based on SplitMix by
 Steele, Lea, and Flood (https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf).
 The generated output exactly matches Java 24.0.1.

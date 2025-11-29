@@ -130,9 +130,35 @@ struct
     end
 
 
+  val int_sign_bit_pos: word =
+    case Int.precision of
+      NONE => 0w63
+    | SOME p =>
+        if p >= 64 then
+          0w63
+        else
+          Word.fromInt (p - 1)
+
+  val int_shifter =
+    case Int.minInt of
+      NONE => Int64.toInt (valOf Int64.minInt)
+    | SOME mi => mi
+
+
+  fun into_int w =
+    let
+      val sign_bit_mask = Word64.<< (0w1, int_sign_bit_pos)
+      val top = Word64.andb (sign_bit_mask, w)
+      val bottom = Word64.andb (Word64.- (sign_bit_mask, 0w1), w)
+      val x = Word64.toIntX bottom
+    in
+      if top > 0w0 then x + int_shifter else x
+    end
+
+
   fun gen_int (r: rand) : rand * int =
     let val (r, w) = Internal.advance r
-    in (r, Word64.toIntX (Internal.mix64 w))
+    in (r, into_int (Internal.mix64 w))
     end
 
 
@@ -140,7 +166,7 @@ struct
     let
       val (r, new_r) = split r
       fun gen i =
-        Word64.toIntX (Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i)))
+        into_int (Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i)))
     in
       (r, gen)
     end
@@ -158,7 +184,7 @@ struct
         val (r, w) = gen_w64 r
         val w = Word64.+ (wlo, Word64.mod (w, n))
       in
-        (r, Word64.toIntX w)
+        (r, into_int w)
       end
 
 
@@ -177,7 +203,7 @@ struct
           let
             val w = Internal.mix64 (Internal.nth_seed new_r (Word64.fromInt i))
           in
-            Word64.toIntX (Word64.+ (wlo, Word64.mod (w, n)))
+            into_int (Word64.+ (wlo, Word64.mod (w, n)))
           end
       in
         (r, gen)
