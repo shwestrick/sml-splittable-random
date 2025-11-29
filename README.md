@@ -66,8 +66,8 @@ val xs = List.tabulate (1000, fn i =>
 (* splitting always returns a new version of
  * the original generator which can be used freely.
  *)
-val (r, x) = gen_real r
-val (r', x') = gen_real r'
+val (r, x) = gen_real r    (* new version of r is still usable *)
+val (r', x') = gen_real r' (* new version of r' is also still usable *)
 ```
 
 Generators for base types come in two flavors: individual, and
