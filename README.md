@@ -1,6 +1,7 @@
 # sml-splittable-random
 
-Splittable pseudo-random generator in Standard ML, based on SplitMix by
+Splittable, purely functional pseudo-random generator in Standard ML, based on
+SplitMix by
 Steele, Lea, and Flood (https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)
 which is the basis of Java's `java.util.SplittableRandom` class. This generator
 is optimized for efficiency, and is suitable for general pseudo-randomness,
@@ -32,8 +33,11 @@ A fresh generator can be instantiated with `new s` where `s` is some seed.
 Note that all generators constructed in this way have the same initial
 `gamma` (the stride in the SplitMix algorithm).
 
-Basic usage is in a linear style: you should "use" each generator exactly
-once:
+This library is purely functional. Each value
+`r: rand` is a generator, and "using" a generator returns a new generator.
+Typical usage therefore should be in a linear style. You should only "use"
+each generator exactly once, to guarantee you don't get the same pseudo-random
+value multiple times.
 
 ```sml
 val r = new seed
@@ -54,6 +58,10 @@ but can be arbitrarily large.
 (* split into two generators *)
 val (r, r') = split r
 
+(* both r and r' are now usable *)
+val (r, x) = gen_int r    
+val (r', x') = gen_int r' 
+
 (* split into many generators *)
 val (r, g) = split_many r
 val xs = List.tabulate (1000, fn i =>
@@ -67,7 +75,7 @@ val xs = List.tabulate (1000, fn i =>
  * the original generator which can be used freely.
  *)
 val (r, x) = gen_real r    (* new version of r is still usable *)
-val (r', x') = gen_real r' (* new version of r' is also still usable *)
+val (r', x') = gen_real r' (* r' is also still usable *)
 ```
 
 Generators for base types come in two flavors: individual, and
