@@ -45,7 +45,10 @@ val (r, i: int) = gen_int r
 A generator can be split into two independent generators with the `split`
 function. Use `split_many` to produce many independent generators. This
 produces a function `g: int -> rand` where `g i` is the ith generator.
-Here, `i` should be at least 0, but can be arbitrarily large.
+For every `i >= 0`, the generator `g i` will be fresh (producing different
+output from the original input generator, and also different from any other
+`g j`) with high probability. Note that the indices `i` should be at least 0, 
+but can be arbitrarily large.
 
 ```sml
 (* split into two generators *)
@@ -67,7 +70,7 @@ val (r, x) = gen_real r
 val (r', x') = gen_real r'
 ```
 
-Similarly, generators for base types come in two flavors: individual, and
+Generators for base types come in two flavors: individual, and
 "many". The "many" versions return functions of type `int -> ...`,
 used in the same manner as described above.
 
